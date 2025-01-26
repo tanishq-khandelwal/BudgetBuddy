@@ -2,7 +2,7 @@ export default function Home() {
   
  return(
   <div>
-    My App
+    <p>This is the Dashboard</p>
   </div>
  )
 }
