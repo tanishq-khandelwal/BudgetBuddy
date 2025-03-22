@@ -28,7 +28,7 @@ export const Navigation = () => {
   };
 
   if (isMobile) {
-    return ( // Added `return` here
+    return ( 
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger>
           <Button
