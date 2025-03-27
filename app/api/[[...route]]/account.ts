@@ -1,33 +1,68 @@
 import { Hono } from "hono";
 import { db } from "@/db/drizzle";
-import { clerkMiddleware } from "@hono/clerk-auth";
-import { accounts } from "@/db/schema";
+import { accounts, insertAccountSchema } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { auth } from "@clerk/nextjs/server";
+import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
+import { zValidator } from "@hono/zod-validator";
+import { createId } from "@paralleldrive/cuid2";
+const app = new Hono()
+  .get("/", clerkMiddleware(), async (c) => {
+    const auth = getAuth(c);
 
-const app = new Hono().get("/", clerkMiddleware(), async (c) => {
-  const { userId } = await auth();
+    if (!auth?.userId) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
 
-  if (!userId) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
+    try {
+      const data = await db
+        .select({
+          id: accounts.id,
+          name: accounts.name,
+        })
+        .from(accounts)
+        .where(eq(accounts.userId, auth.userId));
 
-  try {
-    const data = await db
-      .select({
-        id: accounts.id,
-        name: accounts.name,
+      return c.json({ data });
+    } catch (error) {
+      console.error("Failed to fetch accounts:", error);
+      return c.json(
+        {
+          error: "Failed to fetch data",
+          details: error instanceof Error ? error.message : "Unknown error",
+        },
+        500
+      );
+    }
+  })
+  .post(
+    "/",
+    clerkMiddleware(),
+    zValidator(
+      "json",
+      insertAccountSchema.pick({
+        name: true,
       })
-      .from(accounts)
-      .where(eq(accounts.userId, userId));
+    ),
+    async (c) => {
+      const auth = getAuth(c);
+      const values = c.req.valid("json");
+      if (!auth?.userId) {
+        return c.json({ error: "Unauthorized" }, 401);
+      }
 
-    return c.json({ data });
-  } catch (error: any) {
-    return c.json(
-      { error: "Failed to fetch data", details: error.message },
-      500
-    );
-  }
-});
+      const [data] = await db
+        .insert(accounts)
+        .values({
+          id: createId(),
+          userId: auth.userId,
+          ...values,
+        })
+        .returning();
+
+      return c.json({
+        data,
+      });
+    }
+  );
 
 export default app;
