@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import {Toaster} from "@/components/ui/sonner"
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { QueryProviders } from "@/providers/query-provider";
@@ -34,6 +35,7 @@ export default function RootLayout({
         >
           <QueryProviders>
             <SheetProvider/>
+            <Toaster/>
             {children}
           </QueryProviders>
         </body>
