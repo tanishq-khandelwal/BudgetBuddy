@@ -8,16 +8,14 @@ export const runtime = "edge";
 
 const app = new Hono().basePath("/api");
 
-console.log("Loaded Clerk Publishable Key:", process.env.CLERK_SECRET_KEY);
+// Debug environment variables
+console.log("Environment check:", {
+  hasPublishableKey: !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+  hasSecretKey: !!process.env.CLERK_SECRET_KEY
+});
 
-app.use(
-  "*",
-  clerkMiddleware({
-    publishableKey: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!,
-    secretKey: process.env.CLERK_SECRET_KEY!,
-  })
-);
-
+// Apply Clerk middleware to all routes
+app.use("*", clerkMiddleware());
 
 app.onError((err, c) => {
   console.error("Unhandled Error:", err);
@@ -27,7 +25,6 @@ app.onError((err, c) => {
 
   return c.json(
     {
-      
       error: "Internal Server Error",
       message: err.message || "Unknown error",
       stack: err.stack || null,

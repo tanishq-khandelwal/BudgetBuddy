@@ -8,6 +8,13 @@
       "when": 1742667481763,
       "tag": "0000_reflective_purifiers",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1743518607791,
+      "tag": "0001_unknown_magneto",
+      "breakpoints": true
     }
   ]
 }
