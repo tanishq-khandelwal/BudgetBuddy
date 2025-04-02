@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNewAccount } from "@/features/accounts/hooks/use-new-accounts";
@@ -7,29 +8,25 @@ import { Plus } from "lucide-react";
 import { columns, Payment } from "./columns";
 import { DataTable } from "@/app/components/data-table";
 
-
-
 async function getData(): Promise<Payment[]> {
-    // Fetch data from your API here.
-    return [
-      {
-        id: "728ed52f",
-        amount: 100,
-        status: "pending",
-        email: "m@example.com",
-      },
-      {
-        id: "728ed57f",
-        amount: 50,
-        status: "pending",
-        email: "a@example.com",
-      },
-      // ...
-    ]
-  }
-const AccountsPage = async() => {
+  return [
+    { id: "728ed52f", amount: 100, status: "pending", email: "m@example.com" },
+    { id: "728ed57f", amount: 50, status: "pending", email: "a@example.com" },
+  ];
+}
+
+const AccountsPage = () => {
   const newAccount = useNewAccount();
-const data=await getData();
+  const [data, setData] = useState<Payment[]>([]);
+
+  useEffect(() => {
+    async function fetchData() {
+      const result = await getData();
+      setData(result);
+    }
+    fetchData();
+  }, []);
+
   return (
     <div className="max-w-screen-2xl mx-auto w-full pb-10 -mt-24">
       <Card className="bordere-none drop-shadow-sm bg-white">
@@ -42,7 +39,7 @@ const data=await getData();
         </CardHeader>
 
         <CardContent>
-        <DataTable columns={columns} data={data} />
+          <DataTable columns={columns} data={data} />
         </CardContent>
       </Card>
     </div>
