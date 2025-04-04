@@ -8,13 +8,11 @@ export const runtime = "edge";
 
 const app = new Hono().basePath("/api");
 
-// Debug environment variables
 console.log("Environment check:", {
   hasPublishableKey: !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
   hasSecretKey: !!process.env.CLERK_SECRET_KEY
 });
 
-// Apply Clerk middleware to all routes
 app.use("*", clerkMiddleware());
 
 app.onError((err, c) => {
@@ -37,5 +35,6 @@ const routes = app.route("/accounts", account);
 
 export const GET = handle(app);
 export const POST = handle(app);
+export const PATCH = handle(app);
 
 export type AppType = typeof routes;
