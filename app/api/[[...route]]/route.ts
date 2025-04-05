@@ -31,6 +31,7 @@ app.onError((err, c) => {
   );
 });
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const routes = app.route("/accounts", account);
 
 export const GET = handle(app);
