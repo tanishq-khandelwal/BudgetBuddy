@@ -10,7 +10,7 @@ const app = new Hono().basePath("/api");
 
 console.log("Environment check:", {
   hasPublishableKey: !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
-  hasSecretKey: !!process.env.CLERK_SECRET_KEY
+  hasSecretKey: !!process.env.CLERK_SECRET_KEY,
 });
 
 app.use("*", clerkMiddleware());
@@ -36,5 +36,6 @@ const routes = app.route("/accounts", account);
 export const GET = handle(app);
 export const POST = handle(app);
 export const PATCH = handle(app);
+export const DELETE = handle(app);
 
 export type AppType = typeof routes;
