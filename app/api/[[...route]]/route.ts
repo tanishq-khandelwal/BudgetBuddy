@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { handle } from "hono/vercel";
 import account from "./account";
+import categories from "./categories"
 import { HTTPException } from "hono/http-exception";
 import { clerkMiddleware } from "@hono/clerk-auth";
 
@@ -33,7 +34,7 @@ app.onError((err, c) => {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const routes = app.route("/accounts", account);
-
+const route=app.route("/categories", categories);
 export const GET = handle(app);
 export const POST = handle(app);
 export const PATCH = handle(app);
