@@ -15,6 +15,13 @@
       "when": 1743518607791,
       "tag": "0001_unknown_magneto",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1744521653019,
+      "tag": "0002_luxuriant_mad_thinker",
+      "breakpoints": true
     }
   ]
 }

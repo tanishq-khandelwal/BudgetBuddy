@@ -197,7 +197,7 @@ const app = new Hono()
         .returning();
 
       if (!data) {
-        return c.json({ error: "Account not found" }, 404);
+        return c.json({ error: "Categories not found" }, 404);
       }
 
       return c.json({ data });

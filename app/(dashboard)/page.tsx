@@ -9,7 +9,7 @@ export default function Home() {
   
  return(
   <div>
-    <Button onClick={onOpen}>
+    <Button onClick={onOpen} className="bg-black text-white hover:bg-gray-800 rounded-lg">
       Add an account
     </Button>
   </div>
