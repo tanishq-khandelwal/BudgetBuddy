@@ -3,7 +3,7 @@ import { Trash } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
-import { insertAccountSchema } from "@/db/schema";
+import {insertCategoriesSchema } from "@/db/schema";
 import {
   Form,
   FormControl,
@@ -12,7 +12,7 @@ import {
   FormLabel,
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-const formSchema = insertAccountSchema.pick({
+const formSchema = insertCategoriesSchema.pick({
   name: true,
 });
 
@@ -26,7 +26,7 @@ type Props = {
   disabled?: boolean;
 };
 
-export const AccountForm = ({
+export const CategoryForm = ({
   id,
   defaultValue,
   onSubmit,
@@ -73,7 +73,7 @@ export const AccountForm = ({
           variant="outline"
           disabled={disabled}
         >
-          {id ? "Save Changes" : "Create Account"}
+          {id ? "Save Changes" : "Create Category"}
         </Button>
 
         {!!id && (
@@ -85,7 +85,7 @@ export const AccountForm = ({
             variant="outline"
           >
             <Trash className="size-4 mr-2" />
-            Delete account
+            Delete Category
           </Button>
         )}
       </form>

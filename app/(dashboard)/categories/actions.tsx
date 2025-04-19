@@ -7,14 +7,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useOpenAccount } from "@/features/accounts/hooks/use-open-account";
+import { useOpenCategory } from "@/features/categories/hooks/use-open-category";
 import { Delete, Edit, MoreHorizontal } from "lucide-react";
 
 type Props = {
   id: string;
 };
 export const Actions = ({ id }: Props) => {
-  const { onOpen } = useOpenAccount();
+  const { onOpen } = useOpenCategory();
   return (
     <>
       <DropdownMenu>

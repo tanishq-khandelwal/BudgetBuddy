@@ -2,14 +2,16 @@ import { useQuery } from "@tanstack/react-query";
 
 import { client } from "@/lib/hono";
 
-export const useGetAccounts = () => {
+export const useGetCategories = () => {
+
+  console.log("Query hook called");
   const query = useQuery({
-    queryKey: ["accounts"],
+    queryKey: ["categories"],
     queryFn: async () => {
-      const response = await client.api.accounts.$get();
+      const response = await client.api.categories.$get();
 
       if (!response.ok) {
-        throw new Error("Failed to fetch accounts");
+        throw new Error("Failed to fetch categories");
       }
 
       const { data } = await response.json();

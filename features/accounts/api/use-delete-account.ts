@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { client } from "@/lib/hono";
 
 type ResponseType = InferResponseType<
-  (typeof client.api.accounts)[":id"]["$delete"]
+  (typeof client.api.account)[":id"]["$delete"]
 >;
 
 
@@ -13,7 +13,7 @@ export const useDeleteAccount = (id?: string) => {
 
   const mutation = useMutation<ResponseType, Error>({
     mutationFn: async () => {
-      const response = await client.api.accounts[":id"]["$delete"]({
+      const response = await client.api.account[":id"]["$delete"]({
         param: { id },
       });
       console.log(response);

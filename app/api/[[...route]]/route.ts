@@ -32,12 +32,17 @@ app.onError((err, c) => {
   );
 });
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const routes = app.route("/accounts", account);
-const route=app.route("/categories", categories);
-export const GET = handle(app);
-export const POST = handle(app);
-export const PATCH = handle(app);
-export const DELETE = handle(app);
+// Define the type for the Hono app instance
+const routes = app
+  .use("*", clerkMiddleware())
+  .route("/account", account)
+  .route("/categories", categories);
 
 export type AppType = typeof routes;
+
+// Export the handler for Vercel
+export const GET = handle(routes);
+export const POST = handle(routes);
+export const PUT = handle(routes);
+export const PATCH = handle(routes);
+export const DELETE = handle(routes);

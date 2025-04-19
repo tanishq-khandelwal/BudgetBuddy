@@ -4,10 +4,10 @@ import { toast } from "sonner";
 import { client } from "@/lib/hono";
 
 type ResponseType = InferResponseType<
-  (typeof client.api.accounts)[":id"]["$patch"]
+  (typeof client.api.account)[":id"]["$patch"]
 >;
 type RequestType = InferRequestType<
-  (typeof client.api.accounts)[":id"]["$patch"]
+  (typeof client.api.account)[":id"]["$patch"]
 >["json"];
 
 export const useEditAccount = (id?: string) => {
@@ -15,7 +15,7 @@ export const useEditAccount = (id?: string) => {
 
   const mutation = useMutation<ResponseType, Error, RequestType>({
     mutationFn: async (json) => {
-      const response = await client.api.accounts[":id"]["$patch"]({
+      const response = await client.api.account[":id"]["$patch"]({
         json,
         param: { id }
       });
@@ -25,7 +25,7 @@ export const useEditAccount = (id?: string) => {
     onSuccess: () => {
       toast.success("Account upadted");
       queryClient.invalidateQueries({ queryKey: ["account",{id}] });
-      queryClient.invalidateQueries({ queryKey: ["accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["account"] });
     },
     onError: () => {
       toast.error("Failed to update account");
