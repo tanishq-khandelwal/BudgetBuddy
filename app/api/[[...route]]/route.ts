@@ -4,6 +4,7 @@ import account from "./account";
 import categories from "./categories"
 import { HTTPException } from "hono/http-exception";
 import { clerkMiddleware } from "@hono/clerk-auth";
+import transactions from './transactions'
 
 export const runtime = "edge";
 
@@ -36,7 +37,8 @@ app.onError((err, c) => {
 const routes = app
   .use("*", clerkMiddleware())
   .route("/account", account)
-  .route("/categories", categories);
+  .route("/categories", categories)
+  .route("/transactions",transactions)
 
 export type AppType = typeof routes;
 
