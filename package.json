@@ -38,7 +38,7 @@
     "drizzle-orm": "^0.41.0",
     "drizzle-zod": "^0.7.0",
     "form": "^0.2.5",
-    "hono": "^4.7.1",
+    "hono": "^4.10.3",
     "input": "^1.0.1",
     "lucide-react": "^0.544.0",
     "next": "15.0.3",
