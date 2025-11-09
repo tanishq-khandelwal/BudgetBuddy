@@ -13,6 +13,9 @@ import {
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
+import { DatePicker } from "@/components/ui/date-picker";
+import { Textarea } from "@/components/ui/textarea";
+import { AmountInput } from "@/components/amount-input";
 
 const formSchema = z.object({
   date: z.coerce.date(),
@@ -73,6 +76,21 @@ export const TransactionForm = ({
         className="space-y-4 pt-4"
       >
         <FormField
+          name="date"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <DatePicker
+                  value={field.value}
+                  onChange={field.onChange}
+                  disabled={disabled}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        <FormField
           name="accountId"
           control={form.control}
           render={({ field }) => (
@@ -112,8 +130,60 @@ export const TransactionForm = ({
           )}
         />
 
+        <FormField
+          name="payee"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Payee</FormLabel>
+              <FormControl>
+                <Input
+                  disabled={disabled}
+                  placeholder="Add a payee"
+                  {...field}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          name="amount"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Amount</FormLabel>
+              <FormControl>
+                <AmountInput
+                  {...field}
+                  disabled={disabled}
+                  placeholder="0.00"
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          name="notes"
+          control={form.control}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Notes</FormLabel>
+              <FormControl>
+                <Textarea
+                  {...field}
+                  value={field.value ?? ""}
+                  disabled={disabled}
+                  placeholder="Optional Notes"
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+
         <Button
-          className="w-full text-black"
+          className="w-full bg-black text-white hover:bg-black hover:text-white"
           variant="outline"
           disabled={disabled}
         >
@@ -125,7 +195,7 @@ export const TransactionForm = ({
             type="button"
             disabled={disabled}
             onClick={handleDelete}
-            className="w-full"
+            className="w-full bg-black text-white hover:bg-black"
             variant="outline"
           >
             <Trash className="size-4 mr-2" />

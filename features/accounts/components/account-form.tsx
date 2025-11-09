@@ -69,7 +69,7 @@ export const AccountForm = ({
           )}
         />
         <Button
-          className="w-full text-black"
+          className="w-full  bg-black text-white hover:bg-black hover:text-white"
           variant="outline"
           disabled={disabled}
         >

@@ -3,7 +3,7 @@ import { Trash } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
-import {insertCategoriesSchema } from "@/db/schema";
+import { insertCategoriesSchema } from "@/db/schema";
 import {
   Form,
   FormControl,
@@ -69,7 +69,7 @@ export const CategoryForm = ({
           )}
         />
         <Button
-          className="w-full text-black"
+          className="w-full  bg-black text-white hover:bg-black hover:text-whites"
           variant="outline"
           disabled={disabled}
         >
