@@ -12,7 +12,7 @@ export const useCreateCategory = () => {
   const mutation = useMutation<ResponseType, Error, RequestType>({
     mutationFn: async (json) => {
       const response = await client.api.categories.$post({ json });
-        console.log(response);
+
       return await response.json();
     },
     onSuccess: () => {

@@ -42,7 +42,6 @@ export const EditAccountSheet = () => {
         onClose();
       },
     });
-    console.log({ values });
   };
 
   const onDelete = async () => {

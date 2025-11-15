@@ -17,14 +17,14 @@ export const useEditAccount = (id?: string) => {
     mutationFn: async (json) => {
       const response = await client.api.account[":id"]["$patch"]({
         json,
-        param: { id }
+        param: { id },
       });
-      console.log(response);
+
       return await response.json();
     },
     onSuccess: () => {
       toast.success("Account upadted");
-      queryClient.invalidateQueries({ queryKey: ["account",{id}] });
+      queryClient.invalidateQueries({ queryKey: ["account", { id }] });
       queryClient.invalidateQueries({ queryKey: ["account"] });
     },
     onError: () => {

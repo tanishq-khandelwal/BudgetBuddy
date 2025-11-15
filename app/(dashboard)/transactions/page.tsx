@@ -43,8 +43,6 @@ const TransactionsPage = () => {
   const transactionsQuery = useGetTransactions();
   const transactions = transactionsQuery.data || [];
 
-  console.log("Transactions loaded:", transactions.length, transactions);
-
   const [AccountDialog, confirmAccount] = useSelectAccount();
 
   const onSubmitImport = async (values: unknown[]) => {
@@ -59,8 +57,6 @@ const TransactionsPage = () => {
       accountId: accountId as string,
       categoryId: null, // Set categoryId to null for imports without category
     }));
-
-    console.log("Data being sent to API:", data);
 
     createTransactions.mutate(data, {
       onSuccess: () => {

@@ -53,7 +53,6 @@ export const NewTransactionSheet = () => {
         onClose();
       },
     });
-    console.log({ values });
   };
 
   const isPending =

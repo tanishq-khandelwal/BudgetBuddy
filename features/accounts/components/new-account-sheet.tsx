@@ -22,12 +22,11 @@ export const NewAccountSheet = () => {
   const mutation = useCreateAccount();
 
   const onSubmit = (values: FormValues) => {
-    mutation.mutate(values,{
-      onSuccess:()=>{
+    mutation.mutate(values, {
+      onSuccess: () => {
         onClose();
-      }
+      },
     });
-    console.log({ values });
   };
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>

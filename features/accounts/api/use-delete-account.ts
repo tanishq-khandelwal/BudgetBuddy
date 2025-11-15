@@ -7,7 +7,6 @@ type ResponseType = InferResponseType<
   (typeof client.api.account)[":id"]["$delete"]
 >;
 
-
 export const useDeleteAccount = (id?: string) => {
   const queryClient = useQueryClient();
 
@@ -16,12 +15,12 @@ export const useDeleteAccount = (id?: string) => {
       const response = await client.api.account[":id"]["$delete"]({
         param: { id },
       });
-      console.log(response);
+
       return await response.json();
     },
     onSuccess: () => {
       toast.success("Account Deleted");
-      queryClient.invalidateQueries({ queryKey: ["account",{id}] });
+      queryClient.invalidateQueries({ queryKey: ["account", { id }] });
       queryClient.invalidateQueries({ queryKey: ["accounts"] });
     },
     onError: () => {

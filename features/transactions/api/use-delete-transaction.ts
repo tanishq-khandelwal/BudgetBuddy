@@ -15,7 +15,7 @@ export const useDeleteTransaction = (id?: string) => {
       const response = await client.api.transactions[":id"]["$delete"]({
         param: { id },
       });
-      console.log(response);
+
       return await response.json();
     },
     onSuccess: () => {

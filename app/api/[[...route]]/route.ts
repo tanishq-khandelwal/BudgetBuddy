@@ -11,11 +11,6 @@ export const runtime = "edge";
 
 const app = new Hono().basePath("/api");
 
-console.log("Environment check:", {
-  hasPublishableKey: !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
-  hasSecretKey: !!process.env.CLERK_SECRET_KEY,
-});
-
 app.use("*", clerkMiddleware());
 
 app.onError((err, c) => {

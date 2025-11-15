@@ -23,17 +23,16 @@ type FormValues = z.input<typeof formSchema>;
 
 export const EditAccountSheet = () => {
   const { isOpen, onClose, id } = useOpenAccount();
-  const [ConfirmationDialog,Confirm]=useConfirm(
+  const [ConfirmationDialog, Confirm] = useConfirm(
     "Are you Sure?",
     "You are about to delete this account",
-
-  )
+  );
 
   const accountQuery = useGetAccount(id);
-  const editMutation=useEditAccount(id);
-  const deleteMutation=useDeleteAccount(id);
+  const editMutation = useEditAccount(id);
+  const deleteMutation = useDeleteAccount(id);
 
-  const isPending=editMutation.isPending || deleteMutation.isPending;
+  const isPending = editMutation.isPending || deleteMutation.isPending;
 
   const isLoading = accountQuery.isLoading;
 
@@ -43,21 +42,19 @@ export const EditAccountSheet = () => {
         onClose();
       },
     });
-    console.log({ values });
   };
 
+  const onDelete = async () => {
+    const ok = await Confirm();
 
-  const onDelete=async()=>{
-    const ok=await Confirm();
-
-    if(ok){
-      deleteMutation.mutate(undefined,{
+    if (ok) {
+      deleteMutation.mutate(undefined, {
         onSuccess: () => {
           onClose();
         },
-      })
+      });
     }
-  }
+  };
   const defaultValues = accountQuery.data
     ? {
         name: accountQuery.data.name,
@@ -67,30 +64,28 @@ export const EditAccountSheet = () => {
       };
   return (
     <>
-    <ConfirmationDialog/>
-    <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="space-y-4 bg-white">
-        <SheetHeader>
-          <SheetTitle>Edit Account</SheetTitle>
-          <SheetDescription>
-            Edit an Existing Account
-          </SheetDescription>
-        </SheetHeader>
-        {isLoading ? (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Loader2 className="size-4 animate-spin" />
-          </div>
-        ) : (
-          <AccountForm
-          id={id}
-            onSubmit={onSubmit}
-            disabled={isPending}
-            defaultValue={defaultValues}
-            onDelete={onDelete}
-          />
-        )}
-      </SheetContent>
-    </Sheet>
+      <ConfirmationDialog />
+      <Sheet open={isOpen} onOpenChange={onClose}>
+        <SheetContent className="space-y-4 bg-white">
+          <SheetHeader>
+            <SheetTitle>Edit Account</SheetTitle>
+            <SheetDescription>Edit an Existing Account</SheetDescription>
+          </SheetHeader>
+          {isLoading ? (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Loader2 className="size-4 animate-spin" />
+            </div>
+          ) : (
+            <AccountForm
+              id={id}
+              onSubmit={onSubmit}
+              disabled={isPending}
+              defaultValue={defaultValues}
+              onDelete={onDelete}
+            />
+          )}
+        </SheetContent>
+      </Sheet>
     </>
   );
 };

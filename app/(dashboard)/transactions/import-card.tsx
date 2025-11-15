@@ -142,10 +142,6 @@ export const ImportCard = ({ data, onCancel, onSubmit }: Props) => {
       notes: item.notes || null,
     }));
 
-    console.log(
-      `Importing ${formattedData.length} transactions:`,
-      formattedData,
-    );
     onSubmit(formattedData);
   };
 
