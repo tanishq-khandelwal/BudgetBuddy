@@ -12,10 +12,11 @@ import {
   FormLabel,
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/select";
+import { CustomSelect } from "@/components/ui/custom-select";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { AmountInput } from "@/components/amount-input";
+import { convertAmountToMiliunits } from "@/lib/utils";
 
 const formSchema = z.object({
   date: z.coerce.date(),
@@ -62,7 +63,13 @@ export const TransactionForm = ({
   });
 
   const handleSubmit = (values: FormValues) => {
-    console.log({ values });
+    const amount = parseFloat(values.amount);
+    const amountInMiliunits = convertAmountToMiliunits(amount);
+
+    onSubmit({
+      ...values,
+      amount: amountInMiliunits,
+    });
   };
 
   const handleDelete = () => {
@@ -97,7 +104,7 @@ export const TransactionForm = ({
             <FormItem>
               <FormLabel>Account</FormLabel>
               <FormControl>
-                <Select
+                <CustomSelect
                   placeholder="Select an account"
                   options={accountOptions}
                   onCreate={onCreateAccount}
@@ -117,7 +124,7 @@ export const TransactionForm = ({
             <FormItem>
               <FormLabel>Category</FormLabel>
               <FormControl>
-                <Select
+                <CustomSelect
                   placeholder="Select an category"
                   options={categoryOptions}
                   onCreate={onCreateCategory}
@@ -187,7 +194,7 @@ export const TransactionForm = ({
           variant="outline"
           disabled={disabled}
         >
-          {id ? "Save Changes" : "Create Account"}
+          {id ? "Save Changes" : "Create Transaction"}
         </Button>
 
         {!!id && (

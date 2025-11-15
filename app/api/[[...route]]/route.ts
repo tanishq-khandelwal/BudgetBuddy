@@ -1,10 +1,11 @@
 import { Hono } from "hono";
 import { handle } from "hono/vercel";
 import account from "./account";
-import categories from "./categories"
+import categories from "./categories";
 import { HTTPException } from "hono/http-exception";
 import { clerkMiddleware } from "@hono/clerk-auth";
-import transactions from './transactions'
+import transactions from "./transactions";
+import summary from "./summary";
 
 export const runtime = "edge";
 
@@ -29,7 +30,7 @@ app.onError((err, c) => {
       message: err.message || "Unknown error",
       stack: err.stack || null,
     },
-    500
+    500,
   );
 });
 
@@ -38,7 +39,8 @@ const routes = app
   .use("*", clerkMiddleware())
   .route("/account", account)
   .route("/categories", categories)
-  .route("/transactions",transactions)
+  .route("/transactions", transactions)
+  .route("/summary", summary);
 
 export type AppType = typeof routes;
 
