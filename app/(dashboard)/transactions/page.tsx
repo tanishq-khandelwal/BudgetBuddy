@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,7 +16,11 @@ import { ImportCard } from "./import-card";
 import { useSelectAccount } from "./use-select-account";
 import { toast } from "sonner";
 
-const INITIAL_IMPORT_RESULTS = {
+const INITIAL_IMPORT_RESULTS: {
+  data: string[][];
+  errors: unknown[];
+  meta: Record<string, unknown>;
+} = {
   data: [],
   errors: [],
   meta: {},
@@ -23,12 +28,14 @@ const INITIAL_IMPORT_RESULTS = {
 
 const TransactionsPage = () => {
   const [variant, setVariant] = useState<"LIST" | "IMPORT">("LIST");
-  const [importResults, setImportResults] = useState<
-    typeof INITIAL_IMPORT_RESULTS
-  >(INITIAL_IMPORT_RESULTS);
+  const [importResults, setImportResults] = useState(INITIAL_IMPORT_RESULTS);
 
   const onUpload = (results: { data: string[][] }) => {
-    setImportResults(results);
+    setImportResults({
+      data: results.data,
+      errors: [],
+      meta: {},
+    });
     setVariant("IMPORT");
   };
 
@@ -53,10 +60,17 @@ const TransactionsPage = () => {
     }
 
     const data = values.map((value) => ({
-      ...value,
+      ...(value as Record<string, unknown>),
       accountId: accountId as string,
       categoryId: null, // Set categoryId to null for imports without category
-    }));
+    })) as {
+      date: Date;
+      amount: number;
+      payee: string;
+      accountId: string;
+      notes?: string | null;
+      categoryId?: string | null;
+    }[];
 
     createTransactions.mutate(data, {
       onSuccess: () => {

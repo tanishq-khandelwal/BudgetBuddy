@@ -107,6 +107,7 @@ const app = new Hono()
           categoryId: transactions.categoryId,
           payee: transactions.payee,
           amount: transactions.amount,
+          notes: transactions.notes,
           accountId: transactions.accountId,
         })
         .from(transactions)

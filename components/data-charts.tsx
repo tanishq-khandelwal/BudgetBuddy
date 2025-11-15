@@ -25,7 +25,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 type Props = {
   data?: {
-    days: { date: Date; income: number; expenses: number }[];
+    income: number;
+    expenses: number;
+    remaining: number;
+    incomeChange: number;
+    expensesChange: number;
+    remainingChange: number;
+    categories: { name: string; value: number }[];
+    days: { date: Date | string; income: number; expenses: number }[];
   };
 };
 
