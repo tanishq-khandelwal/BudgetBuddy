@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { PanelLeftClose, PanelLeftOpen, Plus } from "lucide-react";
+import { useClerk } from "@clerk/nextjs";
+import { LogOut, PanelLeftClose, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,6 +22,7 @@ export const AppSidebar = () => {
   const pathname = usePathname();
   const { collapsed, toggle } = useSidebar();
   const newTransaction = useNewTransaction();
+  const clerk = useClerk();
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -36,7 +38,15 @@ export const AppSidebar = () => {
             collapsed ? "justify-center px-2" : "justify-between px-4",
           )}
         >
-          <Logo href="/dashboard" showText={!collapsed} />
+          {collapsed ? (
+            <Logo
+              showText={false}
+              onClick={toggle}
+              aria-label="Expand sidebar"
+            />
+          ) : (
+            <Logo href="/dashboard" />
+          )}
           {!collapsed && (
             <Button
               variant="ghost"
@@ -109,19 +119,27 @@ export const AppSidebar = () => {
           ))}
         </nav>
 
-        {collapsed && (
-          <div className="border-t border-sidebar-border p-2">
+        <div
+          className={cn(
+            "border-t border-sidebar-border p-3",
+            collapsed && "px-2",
+          )}
+        >
+          <SidebarTooltip label="Sign out" show={collapsed}>
             <Button
               variant="ghost"
-              size="icon"
-              className="w-full text-muted-foreground"
-              onClick={toggle}
-              aria-label="Expand sidebar"
+              onClick={() => clerk.signOut({ redirectUrl: "/" })}
+              aria-label={collapsed ? "Sign out" : undefined}
+              className={cn(
+                "h-9 w-full justify-start gap-3 px-3 text-sidebar-foreground/80 hover:text-destructive",
+                collapsed && "justify-center px-0",
+              )}
             >
-              <PanelLeftOpen className="size-4" />
+              <LogOut className="size-[18px] shrink-0" />
+              {!collapsed && "Sign out"}
             </Button>
-          </div>
-        )}
+          </SidebarTooltip>
+        </div>
       </aside>
     </TooltipProvider>
   );
