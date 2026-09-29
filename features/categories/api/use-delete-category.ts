@@ -4,29 +4,32 @@ import { toast } from "sonner";
 import { client } from "@/lib/hono";
 
 type ResponseType = InferResponseType<
-  (typeof client.api.categories)[":id"]["$delete"]
+  (typeof client.api.categories)[":id"]["$delete"],
+  200
 >;
 
 export const useDeleteCategory = (id?: string) => {
   const queryClient = useQueryClient();
 
-  const mutation = useMutation<ResponseType, Error>({
+  return useMutation<ResponseType, Error>({
     mutationFn: async () => {
       const response = await client.api.categories[":id"]["$delete"]({
         param: { id },
       });
-
+      if (!response.ok) throw new Error("Failed to delete category");
       return await response.json();
     },
     onSuccess: () => {
-      toast.success("Caetgory Deleted");
-      queryClient.invalidateQueries({ queryKey: ["categories", { id }] });
+      toast.success("Category deleted");
       queryClient.invalidateQueries({ queryKey: ["categories"] });
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["summary"] });
+      queryClient.invalidateQueries({ queryKey: ["budgets"] });
+      queryClient.invalidateQueries({ queryKey: ["reports"] });
+      queryClient.invalidateQueries({ queryKey: ["recurring"] });
     },
     onError: () => {
-      toast.error("Failed to delete category");
+      toast.error("Couldn't delete category");
     },
   });
-
-  return mutation;
 };

@@ -4,7 +4,8 @@ import { toast } from "sonner";
 import { client } from "@/lib/hono";
 
 type ResponseType = InferResponseType<
-  (typeof client.api.transactions)["bulk-create"]["$post"]
+  (typeof client.api.transactions)["bulk-create"]["$post"],
+  200
 >;
 type RequestType = InferRequestType<
   (typeof client.api.transactions)["bulk-create"]["$post"]
@@ -13,30 +14,31 @@ type RequestType = InferRequestType<
 export const useBulkCreateTransactions = () => {
   const queryClient = useQueryClient();
 
-  const mutation = useMutation<ResponseType, Error, RequestType>({
+  return useMutation<ResponseType, Error, RequestType>({
     mutationFn: async (json) => {
       const response = await client.api.transactions["bulk-create"]["$post"]({
         json,
       });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-
-        throw new Error(errorText || "Failed to create transactions");
-      }
-
-      const result = await response.json();
-
-      return result;
+      if (!response.ok) throw new Error("Failed to import transactions");
+      return await response.json();
     },
     onSuccess: (data) => {
-      toast.success("Transactions created");
-      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      const n = data.data.length;
+      toast.success(
+        n === 1 ? "1 transaction imported" : `${n} transactions imported`,
+      );
+      for (const key of [
+        "transactions",
+        "summary",
+        "budgets",
+        "reports",
+        "accounts",
+      ]) {
+        queryClient.invalidateQueries({ queryKey: [key] });
+      }
     },
-    onError: (error) => {
-      toast.error("Failed to create transactions");
+    onError: () => {
+      toast.error("Couldn't import transactions");
     },
   });
-
-  return mutation;
 };

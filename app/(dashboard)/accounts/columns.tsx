@@ -1,11 +1,16 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import { ColumnDef } from "@tanstack/react-table";
-import { Checkbox } from "@/components/ui/checkbox";
 import { InferResponseType } from "hono";
-import { ArrowUpDown } from "lucide-react";
+import { Wallet } from "lucide-react";
 import { client } from "@/lib/hono";
+import { cn } from "@/lib/utils";
+import { useCurrency } from "@/hooks/use-currency";
+import {
+  DataTableColumnHeader,
+  selectColumn,
+} from "@/app/components/data-table";
 import { Actions } from "./actions";
 
 export type ResponseType = InferResponseType<
@@ -13,48 +18,82 @@ export type ResponseType = InferResponseType<
   200
 >["data"][0];
 
+export const Balance = ({
+  amount,
+  className,
+}: {
+  amount: number;
+  className?: string;
+}) => {
+  const { formatMiliunits } = useCurrency();
+  return (
+    <span
+      className={cn(
+        "tabular-nums",
+        amount < 0 && "text-destructive",
+        className,
+      )}
+    >
+      {formatMiliunits(amount)}
+    </span>
+  );
+};
+
 export const columns: ColumnDef<ResponseType>[] = [
+  selectColumn<ResponseType>(),
   {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
+    accessorKey: "name",
+    meta: { label: "Name" },
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Account" />
+    ),
+    cell: ({ row }) => (
+      <Link
+        href={`/transactions?accountId=${row.original.id}`}
+        className="inline-flex items-center gap-3 font-medium hover:underline"
+      >
+        <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <Wallet className="size-4" />
+        </span>
+        {row.original.name}
+      </Link>
+    ),
+  },
+  {
+    accessorKey: "transactionCount",
+    meta: { label: "Transactions", className: "text-right" },
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title="Transactions"
+        className="ml-auto"
       />
     ),
     cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
+      <span className="tabular-nums text-muted-foreground">
+        {row.original.transactionCount}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "balance",
+    meta: { label: "Balance", className: "text-right" },
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title="Balance"
+        className="ml-auto"
       />
     ),
-    enableSorting: false,
-    enableHiding: false,
+    cell: ({ row }) => (
+      <Balance amount={row.original.balance} className="font-medium" />
+    ),
   },
   {
-    accessorKey: "name",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Name
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
+    id: "actions",
+    meta: { className: "w-12 text-right" },
+    cell: ({ row }) => (
+      <Actions id={row.original.id} name={row.original.name} />
+    ),
   },
-  {
-    id:"actions",
-    cell: ({ row }) => {
-      return <Actions id={row.original.id} />
-  }
-}
-
 ];

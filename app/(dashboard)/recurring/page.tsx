@@ -1,6 +1,5 @@
-import { PageHeader } from "@/components/page-header";
+import { RecurringView } from "@/features/recurring/components/recurring-view";
 
-// Placeholder — replaced by the recurring feature.
 export default function RecurringPage() {
-  return <PageHeader title="Recurring" />;
+  return <RecurringView />;
 }

@@ -4,7 +4,8 @@ import { toast } from "sonner";
 import { client } from "@/lib/hono";
 
 type ResponseType = InferResponseType<
-  (typeof client.api.transactions)["bulk-delete"]["$post"]
+  (typeof client.api.transactions)["bulk-delete"]["$post"],
+  200
 >;
 type RequestType = InferRequestType<
   (typeof client.api.transactions)["bulk-delete"]["$post"]
@@ -13,21 +14,27 @@ type RequestType = InferRequestType<
 export const useBulkDeleteTransactions = () => {
   const queryClient = useQueryClient();
 
-  const mutation = useMutation<ResponseType, Error, RequestType>({
+  return useMutation<ResponseType, Error, RequestType>({
     mutationFn: async (json) => {
       const response = await client.api.transactions["bulk-delete"]["$post"]({
         json,
       });
+      if (!response.ok) throw new Error("Failed to delete transactions");
       return await response.json();
     },
-    onSuccess: () => {
-      toast.success("Transaction Deleted");
-      queryClient.invalidateQueries({ queryKey: ["tarnsactions"] });
+    onSuccess: (data) => {
+      const n = data.data.length;
+      toast.success(
+        n === 1 ? "1 transaction deleted" : `${n} transactions deleted`,
+      );
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["summary"] });
+      queryClient.invalidateQueries({ queryKey: ["budgets"] });
+      queryClient.invalidateQueries({ queryKey: ["reports"] });
+      queryClient.invalidateQueries({ queryKey: ["accounts"] });
     },
     onError: () => {
-      toast.error("Failed to Delete transaction");
+      toast.error("Couldn't delete transactions");
     },
   });
-
-  return mutation;
 };

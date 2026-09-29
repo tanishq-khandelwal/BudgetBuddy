@@ -1,45 +1,35 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { RowActions } from "@/app/components/row-actions";
 import { useOpenAccount } from "@/features/accounts/hooks/use-open-account";
-import { Delete, Edit, MoreHorizontal } from "lucide-react";
+import { useDeleteAccount } from "@/features/accounts/api/use-delete-account";
+import { useConfirm } from "@/hooks/use-confirm";
 
 type Props = {
   id: string;
+  name: string;
 };
-export const Actions = ({ id }: Props) => {
+
+export const Actions = ({ id, name }: Props) => {
   const { onOpen } = useOpenAccount();
+  const deleteMutation = useDeleteAccount(id);
+  const [ConfirmDialog, confirm] = useConfirm(
+    `Delete "${name}"?`,
+    "This permanently deletes the account and all of its transactions. This can't be undone.",
+    { confirmLabel: "Delete account" },
+  );
+
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="size-8 p-0">
-            <MoreHorizontal className="size-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem
-            disabled={false}
-            onClick={() => {
-              onOpen(id);
-            }}
-          >
-            <Edit className="size-4 mr-2" />
-            Edit
-          </DropdownMenuItem>
-
-          <DropdownMenuItem disabled={false}>
-            <Delete className="size-4 mr-2" />
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <ConfirmDialog />
+      <RowActions
+        label={name}
+        disabled={deleteMutation.isPending}
+        onEdit={() => onOpen(id)}
+        onDelete={async () => {
+          if (await confirm()) deleteMutation.mutate();
+        }}
+      />
     </>
   );
 };

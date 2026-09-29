@@ -1,64 +1,35 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { RowActions } from "@/app/components/row-actions";
 import { useOpenTransaction } from "@/features/transactions/hooks/use-open-transaction";
 import { useDeleteTransaction } from "@/features/transactions/api/use-delete-transaction";
 import { useConfirm } from "@/hooks/use-confirm";
-import { Delete, Edit, MoreHorizontal } from "lucide-react";
 
 type Props = {
   id: string;
+  payee: string;
 };
-export const Actions = ({ id }: Props) => {
+
+export const Actions = ({ id, payee }: Props) => {
   const { onOpen } = useOpenTransaction();
   const deleteMutation = useDeleteTransaction(id);
   const [ConfirmDialog, confirm] = useConfirm(
-    "Are you sure?",
-    "You are about to delete this transaction. This action cannot be undone.",
+    "Delete this transaction?",
+    `"${payee}" will be removed. This can't be undone.`,
+    { confirmLabel: "Delete transaction" },
   );
-
-  const handleDelete = async () => {
-    const ok = await confirm();
-    if (ok) {
-      deleteMutation.mutate();
-    }
-  };
 
   return (
     <>
       <ConfirmDialog />
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="size-8 p-0">
-            <MoreHorizontal className="size-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem
-            disabled={deleteMutation.isPending}
-            onClick={() => {
-              onOpen(id);
-            }}
-          >
-            <Edit className="size-4 mr-2" />
-            Edit
-          </DropdownMenuItem>
-
-          <DropdownMenuItem
-            disabled={deleteMutation.isPending}
-            onClick={handleDelete}
-          >
-            <Delete className="size-4 mr-2" />
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <RowActions
+        label={payee}
+        disabled={deleteMutation.isPending}
+        onEdit={() => onOpen(id)}
+        onDelete={async () => {
+          if (await confirm()) deleteMutation.mutate();
+        }}
+      />
     </>
   );
 };

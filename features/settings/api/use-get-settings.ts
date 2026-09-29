@@ -1,8 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@clerk/nextjs";
 import { client } from "@/lib/hono";
 
-export const useGetSettings = () =>
-  useQuery({
+export const useGetSettings = () => {
+  const { isSignedIn } = useAuth();
+  return useQuery({
+    enabled: !!isSignedIn,
     queryKey: ["settings"],
     queryFn: async () => {
       const response = await client.api.settings.$get();
@@ -12,3 +15,4 @@ export const useGetSettings = () =>
     },
     staleTime: 5 * 60 * 1000,
   });
+};

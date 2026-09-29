@@ -1,11 +1,13 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { ColumnDef } from "@tanstack/react-table";
-import { Checkbox } from "@/components/ui/checkbox";
 import { InferResponseType } from "hono";
-import { ArrowUpDown } from "lucide-react";
 import { client } from "@/lib/hono";
+import {
+  DataTableColumnHeader,
+  selectColumn,
+} from "@/app/components/data-table";
+import { CategoryAvatar } from "@/features/categories/components/category-chip";
 import { Actions } from "./actions";
 
 export type ResponseType = InferResponseType<
@@ -14,47 +16,41 @@ export type ResponseType = InferResponseType<
 >["data"][0];
 
 export const columns: ColumnDef<ResponseType>[] = [
+  selectColumn<ResponseType>(),
   {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
+    accessorKey: "name",
+    meta: { label: "Name" },
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Category" />
+    ),
+    cell: ({ row }) => (
+      <span className="inline-flex items-center gap-3 font-medium">
+        <CategoryAvatar name={row.original.name} className="size-8" />
+        {row.original.name}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "transactionCount",
+    meta: { label: "Transactions", className: "text-right" },
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title="Transactions"
+        className="ml-auto"
       />
     ),
     cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
+      <span className="tabular-nums text-muted-foreground">
+        {row.original.transactionCount}
+      </span>
     ),
-    enableSorting: false,
-    enableHiding: false,
   },
   {
-    accessorKey: "name",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Name
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
+    id: "actions",
+    meta: { className: "w-12 text-right" },
+    cell: ({ row }) => (
+      <Actions id={row.original.id} name={row.original.name} />
+    ),
   },
-  {
-    id:"actions",
-    cell: ({ row }) => {
-      return <Actions id={row.original.id} />
-  }
-}
-
 ];

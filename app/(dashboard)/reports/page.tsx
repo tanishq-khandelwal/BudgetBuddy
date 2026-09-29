@@ -1,6 +1,10 @@
-import { PageHeader } from "@/components/page-header";
+import { Suspense } from "react";
+import { ReportsView } from "@/features/reports/components/reports-view";
 
-// Placeholder — replaced by the reports feature.
 export default function ReportsPage() {
-  return <PageHeader title="Reports" />;
+  return (
+    <Suspense>
+      <ReportsView />
+    </Suspense>
+  );
 }

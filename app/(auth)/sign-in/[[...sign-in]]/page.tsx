@@ -1,29 +1,36 @@
 import { SignIn, ClerkLoaded, ClerkLoading } from "@clerk/nextjs";
-import { Loader2 } from "lucide-react";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { Skeleton } from "@/components/ui/skeleton";
+
+export const metadata: Metadata = { title: "Sign in · BudgetBuddy" };
 
 export default function Page() {
   return (
-    <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
-      <div className="h-full lg:flex flex-col items-center justify-center px-4">
-        <div className="text-center space-y-4 pt-16">
-          <h1 className="font-bold text-3xl text-gray-800">Welcome Back!</h1>
-          <p className="text-base text-gray-500">
-            Log in or Create account to get back to your dashboard!
-          </p>
+    <div className="flex w-full max-w-[25rem] flex-col items-center gap-6">
+      <ClerkLoaded>
+        <SignIn path="/sign-in" />
+      </ClerkLoaded>
+      <ClerkLoading>
+        <div
+          className="w-full space-y-4 rounded-2xl border p-8"
+          aria-busy="true"
+        >
+          <Skeleton className="mx-auto h-6 w-40" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
         </div>
-        <div className="flex items-center justify-center mt-8">
-          <ClerkLoaded>
-            <SignIn path="/sign-in" />
-          </ClerkLoaded>
-          <ClerkLoading>
-            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-          </ClerkLoading>
-        </div>
-      </div>
-
-      <div className="h-full bg-blue-600 hidden lg:flex items-center justify-center">
-
-      </div>
+      </ClerkLoading>
+      <p className="text-sm text-muted-foreground">
+        New to BudgetBuddy?{" "}
+        <Link
+          href="/sign-up"
+          className="font-medium text-primary hover:underline"
+        >
+          Create an account
+        </Link>
+      </p>
     </div>
   );
 }

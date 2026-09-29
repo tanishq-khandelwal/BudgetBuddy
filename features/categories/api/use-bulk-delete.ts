@@ -4,7 +4,8 @@ import { toast } from "sonner";
 import { client } from "@/lib/hono";
 
 type ResponseType = InferResponseType<
-  (typeof client.api.categories)["bulk-delete"]["$post"]
+  (typeof client.api.categories)["bulk-delete"]["$post"],
+  200
 >;
 type RequestType = InferRequestType<
   (typeof client.api.categories)["bulk-delete"]["$post"]
@@ -13,22 +14,26 @@ type RequestType = InferRequestType<
 export const useBulkDeletecategories = () => {
   const queryClient = useQueryClient();
 
-  const mutation = useMutation<ResponseType, Error, RequestType>({
+  return useMutation<ResponseType, Error, RequestType>({
     mutationFn: async (json) => {
       const response = await client.api.categories["bulk-delete"]["$post"]({
         json,
       });
-
+      if (!response.ok) throw new Error("Failed to delete categorys");
       return await response.json();
     },
-    onSuccess: () => {
-      toast.success("categories Deleted");
+    onSuccess: (data) => {
+      const n = data.data.length;
+      toast.success(n === 1 ? "1 category deleted" : `${n} categorys deleted`);
       queryClient.invalidateQueries({ queryKey: ["categories"] });
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["summary"] });
+      queryClient.invalidateQueries({ queryKey: ["budgets"] });
+      queryClient.invalidateQueries({ queryKey: ["reports"] });
+      queryClient.invalidateQueries({ queryKey: ["recurring"] });
     },
     onError: () => {
-      toast.error("Failed to Delete Category");
+      toast.error("Couldn't delete categorys");
     },
   });
-
-  return mutation;
 };

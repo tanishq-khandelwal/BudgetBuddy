@@ -1,9 +1,18 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { db } from "@/db/drizzle";
-import { transactions, accounts } from "@/db/schema";
-import { parse, subDays, differenceInDays } from "date-fns";
-import { and, eq, gte, lte, desc, sql, sum } from "drizzle-orm";
+import { transactions, accounts, categories } from "@/db/schema";
+import {
+  parse,
+  subDays,
+  differenceInDays,
+  startOfMonth,
+  startOfDay,
+  endOfDay,
+  eachDayOfInterval,
+  format,
+} from "date-fns";
+import { and, eq, gte, lte, desc, sql } from "drizzle-orm";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { zValidator } from "@hono/zod-validator";
 
@@ -27,17 +36,29 @@ const app = new Hono().get(
     }
 
     const defaultTo = new Date();
-    const defaultFrom = subDays(defaultTo, 30);
+    const defaultFrom = startOfMonth(defaultTo);
 
-    const startDate = from
-      ? parse(from, "yyyy-MM-dd", new Date())
-      : defaultFrom;
+    const startDate = startOfDay(
+      from ? parse(from, "yyyy-MM-dd", new Date()) : defaultFrom,
+    );
 
-    const endDate = to ? parse(to, "yyyy-MM-dd", new Date()) : defaultTo;
+    const endDate = endOfDay(
+      to ? parse(to, "yyyy-MM-dd", new Date()) : defaultTo,
+    );
+
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      return c.json({ error: "Invalid date" }, 400);
+    }
 
     const periodLength = differenceInDays(endDate, startDate) + 1;
     const lastPeriodStart = subDays(startDate, periodLength);
     const lastPeriodEnd = subDays(endDate, periodLength);
+    const inRange = and(
+      accountId ? eq(transactions.accountId, accountId) : undefined,
+      eq(accounts.userId, auth.userId),
+      gte(transactions.date, startDate),
+      lte(transactions.date, endDate),
+    );
 
     try {
       // Get current period data
@@ -115,35 +136,30 @@ const app = new Hono().get(
             ? 100
             : 0;
 
-      // Get top categories
-      const categories = await db
+      const categoryRows = await db
         .select({
-          name: sql`COALESCE(categories.name, 'Uncategorized')`.as("name"),
+          name: sql<string>`COALESCE(${categories.name}, 'Uncategorized')`,
           value: sql`SUM(ABS(${transactions.amount}))`.mapWith(Number),
         })
         .from(transactions)
         .innerJoin(accounts, eq(transactions.accountId, accounts.id))
-        .leftJoin(
-          sql`categories`,
-          sql`${transactions.categoryId} = categories.id`,
-        )
-        .where(
-          and(
-            accountId ? eq(transactions.accountId, accountId) : undefined,
-            eq(accounts.userId, auth.userId),
-            gte(transactions.date, startDate),
-            lte(transactions.date, endDate),
-            sql`${transactions.amount} < 0`,
-          ),
-        )
-        .groupBy(sql`categories.name`)
-        .orderBy(desc(sql`SUM(ABS(${transactions.amount}))`))
-        .limit(5);
+        .leftJoin(categories, eq(transactions.categoryId, categories.id))
+        .where(and(inRange, sql`${transactions.amount} < 0`))
+        .groupBy(categories.name)
+        .orderBy(desc(sql`SUM(ABS(${transactions.amount}))`));
 
-      // Get daily data for chart
-      const days = await db
+      const topCategories = categoryRows.slice(0, 5);
+      const otherValue = categoryRows
+        .slice(5)
+        .reduce((total, row) => total + row.value, 0);
+      const categoryBreakdown =
+        otherValue > 0
+          ? [...topCategories, { name: "Other", value: otherValue }]
+          : topCategories;
+
+      const dayRows = await db
         .select({
-          date: transactions.date,
+          date: sql<string>`to_char(${transactions.date}, 'YYYY-MM-DD')`,
           income:
             sql`SUM(CASE WHEN ${transactions.amount} >= 0 THEN ${transactions.amount} ELSE 0 END)`.mapWith(
               Number,
@@ -155,16 +171,38 @@ const app = new Hono().get(
         })
         .from(transactions)
         .innerJoin(accounts, eq(transactions.accountId, accounts.id))
-        .where(
-          and(
-            accountId ? eq(transactions.accountId, accountId) : undefined,
-            eq(accounts.userId, auth.userId),
-            gte(transactions.date, startDate),
-            lte(transactions.date, endDate),
-          ),
-        )
-        .groupBy(transactions.date)
-        .orderBy(transactions.date);
+        .where(inRange)
+        .groupBy(sql`to_char(${transactions.date}, 'YYYY-MM-DD')`);
+
+      // Fill days with no activity so charts are continuous.
+      const byDay = new Map(dayRows.map((row) => [row.date, row]));
+      const days = eachDayOfInterval({ start: startDate, end: endDate }).map(
+        (day) => {
+          const key = format(day, "yyyy-MM-dd");
+          const row = byDay.get(key);
+          return {
+            date: key,
+            income: row?.income ?? 0,
+            expenses: row?.expenses ?? 0,
+          };
+        },
+      );
+
+      const recentTransactions = await db
+        .select({
+          id: transactions.id,
+          payee: transactions.payee,
+          amount: transactions.amount,
+          date: transactions.date,
+          category: categories.name,
+          account: accounts.name,
+        })
+        .from(transactions)
+        .innerJoin(accounts, eq(transactions.accountId, accounts.id))
+        .leftJoin(categories, eq(transactions.categoryId, categories.id))
+        .where(inRange)
+        .orderBy(desc(transactions.date))
+        .limit(6);
 
       return c.json({
         data: {
@@ -174,8 +212,10 @@ const app = new Hono().get(
           incomeChange,
           expensesChange,
           remainingChange,
-          categories,
+          categories: topCategories,
+          categoryBreakdown,
           days,
+          recentTransactions,
         },
       });
     } catch (error) {

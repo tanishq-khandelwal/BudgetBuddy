@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import qs from "query-string";
+import { Wallet } from "lucide-react";
 import { useGetAccounts } from "@/features/accounts/api/use-get-accounts";
 import {
   Select,
@@ -29,32 +30,31 @@ export const AccountFilter = () => {
       to: to || undefined,
     };
 
-    const url = qs.stringifyUrl(
-      { url: pathname, query },
-      { skipNull: true, skipEmptyString: true },
+    router.push(
+      qs.stringifyUrl(
+        { url: pathname, query },
+        { skipNull: true, skipEmptyString: true },
+      ),
     );
-
-    router.push(url);
   };
 
   return (
-    <div className="flex flex-col gap-1.5 w-full lg:w-auto">
-      <label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
-        Account
-      </label>
-      <Select value={accountId} onValueChange={onChange} disabled={isLoading}>
-        <SelectTrigger className="w-full lg:w-[200px] bg-white border-2 border-gray-200 hover:border-gray-300 transition-colors">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Accounts</SelectItem>
-          {accounts?.map((account) => (
-            <SelectItem key={account.id} value={account.id}>
-              {account.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+    <Select value={accountId} onValueChange={onChange} disabled={isLoading}>
+      <SelectTrigger
+        aria-label="Filter by account"
+        className="h-10 w-full gap-2 sm:w-[180px]"
+      >
+        <Wallet className="size-4 shrink-0 text-muted-foreground" />
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="all">All accounts</SelectItem>
+        {accounts?.map((account) => (
+          <SelectItem key={account.id} value={account.id}>
+            {account.name}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 };

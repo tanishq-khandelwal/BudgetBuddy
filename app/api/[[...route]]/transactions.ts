@@ -7,12 +7,52 @@ import {
   categories,
   accounts,
 } from "@/db/schema";
-import { parse, subDays } from "date-fns";
+import { endOfDay, parse, startOfDay, startOfMonth } from "date-fns";
+import { HTTPException } from "hono/http-exception";
 import { and, eq, gte, inArray, lte, desc, sql } from "drizzle-orm";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { zValidator } from "@hono/zod-validator";
 import { createId } from "@paralleldrive/cuid2";
+
+// Rejects (400) any account/category id that doesn't belong to the user.
+const assertOwnership = async (
+  userId: string,
+  accountIds: string[],
+  categoryIds: (string | null | undefined)[],
+) => {
+  const accIds = [...new Set(accountIds)];
+  const catIds = [...new Set(categoryIds.filter((v): v is string => !!v))];
+
+  if (accIds.length) {
+    const owned = await db
+      .select({ id: accounts.id })
+      .from(accounts)
+      .where(and(eq(accounts.userId, userId), inArray(accounts.id, accIds)));
+    if (owned.length !== accIds.length) {
+      throw new HTTPException(400, { message: "Invalid account" });
+    }
+  }
+  if (catIds.length) {
+    const owned = await db
+      .select({ id: categories.id })
+      .from(categories)
+      .where(
+        and(eq(categories.userId, userId), inArray(categories.id, catIds)),
+      );
+    if (owned.length !== catIds.length) {
+      throw new HTTPException(400, { message: "Invalid category" });
+    }
+  }
+};
+
 const app = new Hono()
+  .onError((error, c) => {
+    console.error("API error:", error);
+    if (error instanceof HTTPException) {
+      return c.json({ error: error.message }, error.status);
+    }
+    return c.json({ error: "Something went wrong. Please try again." }, 500);
+  })
   .get(
     "/",
     zValidator(
@@ -32,14 +72,15 @@ const app = new Hono()
         return c.json({ error: "Unauthorized" }, 401);
       }
 
-      const defaultTo = new Date();
-      const defaultFrom = subDays(defaultTo, 30);
-
+      const now = new Date();
       const startDate = from
-        ? parse(from, "yyyy-MM-dd", new Date())
-        : defaultFrom;
+        ? startOfDay(parse(from, "yyyy-MM-dd", now))
+        : startOfMonth(now);
+      const endDate = endOfDay(to ? parse(to, "yyyy-MM-dd", now) : now);
 
-      const endDate = to ? parse(to, "yyyy-MM-dd", new Date()) : defaultTo;
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        return c.json({ error: "Invalid date range" }, 400);
+      }
 
       try {
         const data = await db
@@ -50,6 +91,8 @@ const app = new Hono()
             categoryId: transactions.categoryId,
             payee: transactions.payee,
             amount: transactions.amount,
+            notes: transactions.notes,
+            recurringId: transactions.recurringId,
             account: accounts.name,
             accountId: transactions.accountId,
           })
@@ -68,7 +111,7 @@ const app = new Hono()
 
         return c.json({ data });
       } catch (error) {
-        console.error("Failed to fetch categories:", error);
+        console.error("Failed to fetch transactions:", error);
         return c.json(
           {
             error: "Failed to fetch data",
@@ -93,7 +136,7 @@ const app = new Hono()
       const { id } = c.req.valid("param");
 
       if (!id) {
-        return c.json({ error: "Missing account id" }, 400);
+        return c.json({ error: "Missing transaction id" }, 400);
       }
 
       if (!auth?.userId) {
@@ -137,6 +180,12 @@ const app = new Hono()
         return c.json({ error: "Unauthorized" }, 401);
       }
 
+      await assertOwnership(
+        auth.userId,
+        [values.accountId],
+        [values.categoryId],
+      );
+
       const [data] = await db
         .insert(transactions)
         .values({
@@ -169,6 +218,13 @@ const app = new Hono()
       if (!auth?.userId) {
         return c.json({ error: "Unauthorized" }, 401);
       }
+
+      if (!values.length) return c.json({ data: [] });
+      await assertOwnership(
+        auth.userId,
+        values.map((v) => v.accountId),
+        values.map((v) => v.categoryId),
+      );
 
       const data = await db
         .insert(transactions)
@@ -249,8 +305,14 @@ const app = new Hono()
         return c.json({ error: "Unauthorized" }, 401);
       }
       if (!id) {
-        return c.json({ error: "Missing account id" }, 400);
+        return c.json({ error: "Missing transaction id" }, 400);
       }
+
+      await assertOwnership(
+        auth.userId,
+        [values.accountId],
+        [values.categoryId],
+      );
 
       const transactionToUpdate = db.$with("transactions_to_update").as(
         db
@@ -297,7 +359,7 @@ const app = new Hono()
         return c.json({ error: "Unauthorized" }, 401);
       }
       if (!id) {
-        return c.json({ error: "Missing account id" }, 400);
+        return c.json({ error: "Missing transaction id" }, 400);
       }
 
       const transactionsToDelete = db.$with("transactions_to_delete").as(

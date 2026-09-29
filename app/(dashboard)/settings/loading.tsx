@@ -1,16 +1,16 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Loading() {
   return (
-    <div className="max-w-screen-2xl mx-auto w-full pb-10 -mt-24">
-      <Card className="border-none drop-shadow-sm bg-white">
-        <CardContent className="p-12">
-          <div className="flex flex-col items-center justify-center min-h-[500px]">
-            <Loader2 className="size-12 text-gray-300 animate-spin" />
-          </div>
-        </CardContent>
-      </Card>
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <Skeleton className="h-8 w-40" />
+        <Skeleton className="h-4 w-72 max-w-full" />
+      </div>
+      <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
+        <Skeleton className="h-10 w-full lg:h-48" />
+        <Skeleton className="h-72 w-full rounded-xl" />
+      </div>
     </div>
   );
 }

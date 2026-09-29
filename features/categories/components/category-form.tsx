@@ -1,19 +1,24 @@
 import { z } from "zod";
-import { Trash } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
-import { insertCategoriesSchema } from "@/db/schema";
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormLabel,
+  FormMessage,
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-const formSchema = insertCategoriesSchema.pick({
-  name: true,
+
+const formSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, "Please enter a name")
+    .max(60, "Keep it under 60 characters"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -23,7 +28,10 @@ type Props = {
   defaultValue?: FormValues;
   onSubmit: (values: FormValues) => void;
   onDelete?: () => void;
+  /** Disables everything (any request in flight). */
   disabled?: boolean;
+  /** Shows the spinner on the save button. */
+  saving?: boolean;
 };
 
 export const CategoryForm = ({
@@ -32,25 +40,19 @@ export const CategoryForm = ({
   onSubmit,
   onDelete,
   disabled,
+  saving,
 }: Props) => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: defaultValue,
+    defaultValues: defaultValue ?? { name: "" },
   });
-
-  const handleSubmit = (values: FormValues) => {
-    onSubmit(values);
-  };
-
-  const handleDelete = () => {
-    onDelete?.();
-  };
 
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(handleSubmit)}
-        className="space-y-4 pt-4"
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="space-y-6"
+        noValidate
       >
         <FormField
           name="name"
@@ -60,34 +62,36 @@ export const CategoryForm = ({
               <FormLabel>Name</FormLabel>
               <FormControl>
                 <Input
+                  autoFocus
+                  autoComplete="off"
                   disabled={disabled}
-                  placeholder="e.g. Cash, Bank, Credit Card"
+                  placeholder="e.g. Groceries, Rent, Salary"
                   {...field}
                 />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
-        <Button
-          className="w-full  bg-black text-white hover:bg-black hover:text-whites"
-          variant="outline"
-          disabled={disabled}
-        >
-          {id ? "Save Changes" : "Create Category"}
-        </Button>
 
-        {!!id && (
-          <Button
-            type="button"
-            disabled={disabled}
-            onClick={handleDelete}
-            className="w-full"
-            variant="outline"
-          >
-            <Trash className="size-4 mr-2" />
-            Delete Category
+        <div className="flex flex-col gap-2 pt-2">
+          <Button type="submit" disabled={disabled}>
+            {saving && <Loader2 className="animate-spin" />}
+            {id ? "Save changes" : "Create category"}
           </Button>
-        )}
+          {!!id && (
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={disabled}
+              onClick={onDelete}
+              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+            >
+              <Trash2 />
+              Delete category
+            </Button>
+          )}
+        </div>
       </form>
     </Form>
   );

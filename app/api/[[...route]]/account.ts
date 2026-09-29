@@ -1,12 +1,18 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { db } from "@/db/drizzle";
-import { accounts, insertAccountSchema } from "@/db/schema";
-import { and, eq, inArray } from "drizzle-orm";
+import { accounts, insertAccountSchema, transactions } from "@/db/schema";
+import { and, eq, inArray, sql } from "drizzle-orm";
+import { HTTPException } from "hono/http-exception";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { zValidator } from "@hono/zod-validator";
 import { createId } from "@paralleldrive/cuid2";
 const app = new Hono()
+  .onError((error, c) => {
+    console.error("API error:", error);
+    if (error instanceof HTTPException) return error.getResponse();
+    return c.json({ error: "Something went wrong. Please try again." }, 500);
+  })
   .get("/", async (c) => {
     const auth = getAuth(c);
 
@@ -19,9 +25,14 @@ const app = new Hono()
         .select({
           id: accounts.id,
           name: accounts.name,
+          transactionCount: sql<number>`count(${transactions.id})::int`,
+          balance: sql<number>`coalesce(sum(${transactions.amount}), 0)::float8`,
         })
         .from(accounts)
-        .where(eq(accounts.userId, auth.userId));
+        .leftJoin(transactions, eq(transactions.accountId, accounts.id))
+        .where(eq(accounts.userId, auth.userId))
+        .groupBy(accounts.id, accounts.name)
+        .orderBy(accounts.name);
 
       return c.json({ data });
     } catch (error) {
@@ -31,7 +42,7 @@ const app = new Hono()
           error: "Failed to fetch data",
           details: error instanceof Error ? error.message : "Unknown error",
         },
-        500
+        500,
       );
     }
   })
@@ -41,7 +52,7 @@ const app = new Hono()
       "param",
       z.object({
         id: z.string().optional(),
-      })
+      }),
     ),
     clerkMiddleware(),
     async (c) => {
@@ -69,7 +80,7 @@ const app = new Hono()
       }
 
       return c.json({ data });
-    }
+    },
   )
   .post(
     "/",
@@ -78,7 +89,7 @@ const app = new Hono()
       "json",
       insertAccountSchema.pick({
         name: true,
-      })
+      }),
     ),
     async (c) => {
       const auth = getAuth(c);
@@ -99,7 +110,7 @@ const app = new Hono()
       return c.json({
         data,
       });
-    }
+    },
   )
   .post(
     "/bulk-delete",
@@ -108,7 +119,7 @@ const app = new Hono()
       "json",
       z.object({
         ids: z.array(z.string()),
-      })
+      }),
     ),
 
     async (c) => {
@@ -123,15 +134,15 @@ const app = new Hono()
         .where(
           and(
             eq(accounts.userId, auth.userId),
-            inArray(accounts.id, values.ids)
-          )
+            inArray(accounts.id, values.ids),
+          ),
         )
         .returning({
           id: accounts.id,
         });
 
       return c.json({ data });
-    }
+    },
   )
   .patch(
     "/:id",
@@ -140,13 +151,13 @@ const app = new Hono()
       "param",
       z.object({
         id: z.string().optional(),
-      })
+      }),
     ),
     zValidator(
       "json",
       insertAccountSchema.pick({
         name: true,
-      })
+      }),
     ),
     async (c) => {
       const auth = getAuth(c);
@@ -169,7 +180,7 @@ const app = new Hono()
         return c.json({ error: "Account not found" }, 404);
       }
       return c.json({ data });
-    }
+    },
   )
   .delete(
     "/:id",
@@ -178,7 +189,7 @@ const app = new Hono()
       "param",
       z.object({
         id: z.string().optional(),
-      })
+      }),
     ),
     async (c) => {
       const auth = getAuth(c);
@@ -201,7 +212,7 @@ const app = new Hono()
       }
 
       return c.json({ data });
-    }
+    },
   );
 
 export default app;

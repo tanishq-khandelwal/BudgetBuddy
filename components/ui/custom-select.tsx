@@ -3,16 +3,23 @@
 import { useMemo } from "react";
 import { SingleValue } from "react-select";
 import CreatableSelect from "react-select/creatable";
+import { cn } from "@/lib/utils";
+
+type Option = { label: string; value: string };
 
 type Props = {
   onChange: (value?: string) => void;
   onCreate?: (value: string) => void;
-  options?: { label: string; value: string }[];
+  options?: Option[];
   value?: string | null | undefined;
   disabled?: boolean;
   placeholder?: string;
+  id?: string;
+  "aria-invalid"?: boolean;
 };
 
+// react-select, fully restyled with theme tokens so it matches shadcn inputs
+// in light and dark mode.
 export const CustomSelect = ({
   value,
   onChange,
@@ -20,32 +27,58 @@ export const CustomSelect = ({
   onCreate,
   options = [],
   placeholder,
+  id,
+  "aria-invalid": invalid,
 }: Props) => {
-  const onSelect = (option: SingleValue<{ label: string; value: string }>) => {
-    onChange(option?.value);
-  };
-  const formattedValue = useMemo(() => {
-    return options.find((option) => option.value === value);
-  }, [options, value]);
+  const formattedValue = useMemo(
+    () => options.find((option) => option.value === value) ?? null,
+    [options, value],
+  );
 
   return (
-    <CreatableSelect
+    <CreatableSelect<Option, false>
+      inputId={id}
+      unstyled
       placeholder={placeholder}
-      className="text-sm h-10"
-      styles={{
-        control: (base) => ({
-          ...base,
-          borderColor: "#e2e8f0",
-          ":hover": {
-            borderColor: "#e2e8f0",
-          },
-        }),
-      }}
       value={formattedValue}
-      onChange={onSelect}
+      onChange={(option: SingleValue<Option>) => onChange(option?.value)}
       options={options}
       onCreateOption={onCreate}
       isDisabled={disabled}
+      isClearable
+      aria-invalid={invalid}
+      formatCreateLabel={(input) => `Create "${input}"`}
+      classNames={{
+        control: (s) =>
+          cn(
+            "min-h-10 w-full rounded-md border bg-background px-3 text-sm transition-colors",
+            s.isFocused
+              ? "border-transparent ring-2 ring-ring ring-offset-2 ring-offset-background"
+              : "border-input hover:border-ring/50",
+            invalid && "border-destructive",
+            s.isDisabled && "cursor-not-allowed opacity-50",
+          ),
+        valueContainer: () => "gap-1 py-1",
+        placeholder: () => "text-muted-foreground",
+        singleValue: () => "text-foreground",
+        input: () => "text-foreground",
+        indicatorsContainer: () => "gap-1",
+        clearIndicator: () =>
+          "rounded p-1 text-muted-foreground hover:text-foreground",
+        dropdownIndicator: () =>
+          "rounded p-1 text-muted-foreground hover:text-foreground",
+        indicatorSeparator: () => "hidden",
+        menu: () =>
+          "z-50 mt-1 overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md",
+        menuList: () => "p-1",
+        option: (s) =>
+          cn(
+            "cursor-pointer rounded-sm px-2 py-2 text-sm",
+            s.isFocused && "bg-accent text-accent-foreground",
+            s.isSelected && "font-medium",
+          ),
+        noOptionsMessage: () => "px-2 py-3 text-sm text-muted-foreground",
+      }}
     />
   );
 };

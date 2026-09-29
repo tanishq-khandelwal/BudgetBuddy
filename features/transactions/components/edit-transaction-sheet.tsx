@@ -1,148 +1,84 @@
-import { z } from "zod";
+"use client";
+
 import { Loader2 } from "lucide-react";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { FormSheet } from "@/app/components/form-sheet";
+import { useConfirm } from "@/hooks/use-confirm";
+import { convertAmountFromMiliunits } from "@/lib/utils";
 import { useOpenTransaction } from "../hooks/use-open-transaction";
-import { insertTransactionsSchema } from "@/db/schema";
+import { useTransactionFormOptions } from "../hooks/use-form-options";
 import { useGetTransaction } from "../api/use-get-transaction";
 import { useEditTransactions } from "../api/use-edit-transaction";
 import { useDeleteTransaction } from "../api/use-delete-transaction";
-import { useGetAccounts } from "@/features/accounts/api/use-get-accounts";
-import { useCreateAccount } from "@/features/accounts/api/use-create-account";
 import { TransactionForm } from "./transaction-form";
-import { useCreateCategory } from "@/features/categories/api/use-create-category";
-import { useGetCategories } from "@/features/categories/api/use-get-categories";
-import { useConfirm } from "@/hooks/use-confirm";
-import { convertAmountFromMiliunits } from "@/lib/utils";
-
-const formSchema = insertTransactionsSchema.omit({
-  id: true,
-});
-
-type FormValues = z.input<typeof formSchema>;
 
 export const EditTransactionSheet = () => {
   const { isOpen, onClose, id } = useOpenTransaction();
-
   const [ConfirmDialog, confirm] = useConfirm(
-    "Are you sure?",
-    "You are about to delete this transaction. This action cannot be undone.",
+    "Delete this transaction?",
+    "This can't be undone.",
+    { confirmLabel: "Delete transaction" },
   );
 
   const transactionQuery = useGetTransaction(id);
   const editMutation = useEditTransactions(id);
   const deleteMutation = useDeleteTransaction(id);
-
-  const categoryQuery = useGetCategories();
-  const accountQuery = useGetAccounts();
-  const categoryMutation = useCreateCategory();
-  const accountMutation = useCreateAccount();
-
-  const onCreateCategory = (name: string) =>
-    categoryMutation.mutate({
-      name,
-    });
-
-  const onCreateAccount = (name: string) =>
-    accountMutation.mutate({
-      name,
-    });
-
-  const accountOptions = (accountQuery.data ?? []).map((account) => ({
-    label: account.name,
-    value: account.id,
-  }));
-
-  const categoryOptions = (categoryQuery.data ?? []).map((category) => ({
-    label: category.name,
-    value: category.id,
-  }));
-
-  const onSubmit = (values: FormValues) => {
-    editMutation.mutate(values, {
-      onSuccess: () => {
-        onClose();
-      },
-    });
-  };
+  const options = useTransactionFormOptions();
 
   const onDelete = async () => {
-    const ok = await confirm();
-    if (ok) {
-      deleteMutation.mutate(undefined, {
-        onSuccess: () => {
-          onClose();
-        },
-      });
+    if (await confirm()) {
+      deleteMutation.mutate(undefined, { onSuccess: onClose });
     }
   };
 
-  const isPending =
-    editMutation.isPending ||
-    deleteMutation.isPending ||
-    categoryMutation.isPending ||
-    accountMutation.isPending;
-
-  const isLoading =
-    transactionQuery.isLoading ||
-    categoryQuery.isLoading ||
-    accountQuery.isLoading;
-
-  const defaultValues = transactionQuery.data
-    ? {
-        accountId: transactionQuery.data.accountId,
-        categoryId: transactionQuery.data.categoryId,
-        amount: convertAmountFromMiliunits(
-          transactionQuery.data.amount,
-        ).toString(),
-        date: transactionQuery.data.date
-          ? new Date(transactionQuery.data.date)
-          : new Date(),
-        payee: transactionQuery.data.payee,
-        notes: transactionQuery.data.notes,
-      }
-    : {
-        accountId: "",
-        categoryId: "",
-        amount: "",
-        date: new Date(),
-        payee: "",
-        notes: "",
-      };
+  const t = transactionQuery.data;
+  const isLoading = transactionQuery.isLoading || options.isLoading;
 
   return (
     <>
       <ConfirmDialog />
-      <Sheet open={isOpen} onOpenChange={onClose}>
-        <SheetContent className="space-y-4 bg-white">
-          <SheetHeader>
-            <SheetTitle>Edit Transaction</SheetTitle>
-            <SheetDescription>Edit an existing transaction</SheetDescription>
-          </SheetHeader>
-          {isLoading ? (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Loader2 className="size-4 text-muted-foreground animate-spin" />
-            </div>
-          ) : (
-            <TransactionForm
-              id={id}
-              defaultValue={defaultValues}
-              onSubmit={onSubmit}
-              onDelete={onDelete}
-              disabled={isPending}
-              categoryOptions={categoryOptions}
-              onCreateCategory={onCreateCategory}
-              accountOptions={accountOptions}
-              onCreateAccount={onCreateAccount}
-            />
-          )}
-        </SheetContent>
-      </Sheet>
+      <FormSheet
+        open={isOpen}
+        onOpenChange={onClose}
+        title="Edit transaction"
+        description="Update the details of this transaction."
+      >
+        {t && !isLoading ? (
+          <TransactionForm
+            key={id}
+            id={id}
+            defaultValue={{
+              accountId: t.accountId,
+              categoryId: t.categoryId,
+              amount: convertAmountFromMiliunits(t.amount).toString(),
+              date: new Date(t.date),
+              payee: t.payee,
+              notes: t.notes,
+            }}
+            onSubmit={(values) =>
+              editMutation.mutate(values, { onSuccess: onClose })
+            }
+            onDelete={onDelete}
+            disabled={
+              editMutation.isPending ||
+              deleteMutation.isPending ||
+              options.isPending
+            }
+            saving={editMutation.isPending}
+            accountOptions={options.accountOptions}
+            categoryOptions={options.categoryOptions}
+            onCreateAccount={options.onCreateAccount}
+            onCreateCategory={options.onCreateCategory}
+          />
+        ) : transactionQuery.isError ? (
+          <p className="text-sm text-destructive">
+            Couldn&apos;t load this transaction.
+          </p>
+        ) : (
+          <div className="flex justify-center py-10">
+            <Loader2 className="size-5 animate-spin text-muted-foreground" />
+          </div>
+        )}
+      </FormSheet>
     </>
   );
 };

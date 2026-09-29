@@ -4,7 +4,8 @@ import { toast } from "sonner";
 import { client } from "@/lib/hono";
 
 type ResponseType = InferResponseType<
-  (typeof client.api.account)["bulk-delete"]["$post"]
+  (typeof client.api.account)["bulk-delete"]["$post"],
+  200
 >;
 type RequestType = InferRequestType<
   (typeof client.api.account)["bulk-delete"]["$post"]
@@ -13,22 +14,26 @@ type RequestType = InferRequestType<
 export const useBulkDeleteAccounts = () => {
   const queryClient = useQueryClient();
 
-  const mutation = useMutation<ResponseType, Error, RequestType>({
+  return useMutation<ResponseType, Error, RequestType>({
     mutationFn: async (json) => {
       const response = await client.api.account["bulk-delete"]["$post"]({
         json,
       });
-
+      if (!response.ok) throw new Error("Failed to delete accounts");
       return await response.json();
     },
-    onSuccess: () => {
-      toast.success("Accounts Deleted");
+    onSuccess: (data) => {
+      const n = data.data.length;
+      toast.success(n === 1 ? "1 account deleted" : `${n} accounts deleted`);
       queryClient.invalidateQueries({ queryKey: ["accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["summary"] });
+      queryClient.invalidateQueries({ queryKey: ["budgets"] });
+      queryClient.invalidateQueries({ queryKey: ["reports"] });
+      queryClient.invalidateQueries({ queryKey: ["recurring"] });
     },
     onError: () => {
-      toast.error("Failed to Delete account");
+      toast.error("Couldn't delete accounts");
     },
   });
-
-  return mutation;
 };

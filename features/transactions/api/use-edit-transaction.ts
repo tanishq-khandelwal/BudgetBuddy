@@ -4,7 +4,8 @@ import { toast } from "sonner";
 import { client } from "@/lib/hono";
 
 type ResponseType = InferResponseType<
-  (typeof client.api.transactions)[":id"]["$patch"]
+  (typeof client.api.transactions)[":id"]["$patch"],
+  200
 >;
 type RequestType = InferRequestType<
   (typeof client.api.transactions)[":id"]["$patch"]
@@ -13,23 +14,25 @@ type RequestType = InferRequestType<
 export const useEditTransactions = (id?: string) => {
   const queryClient = useQueryClient();
 
-  const mutation = useMutation<ResponseType, Error, RequestType>({
+  return useMutation<ResponseType, Error, RequestType>({
     mutationFn: async (json) => {
       const response = await client.api.transactions[":id"]["$patch"]({
         json,
         param: { id },
       });
+      if (!response.ok) throw new Error("Failed to update transaction");
       return await response.json();
     },
     onSuccess: () => {
-      toast.success("Transaction Updated");
-      queryClient.invalidateQueries({ queryKey: ["transaction", { id }] });
+      toast.success("Transaction updated");
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["summary"] });
+      queryClient.invalidateQueries({ queryKey: ["budgets"] });
+      queryClient.invalidateQueries({ queryKey: ["reports"] });
+      queryClient.invalidateQueries({ queryKey: ["accounts"] });
     },
     onError: () => {
-      toast.error("Failed to update transaction");
+      toast.error("Couldn't save transaction");
     },
   });
-
-  return mutation;
 };

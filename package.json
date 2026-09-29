@@ -12,7 +12,7 @@
     "db:studio": "drizzle-kit studio",
     "prepare": "husky",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test 'lib/**/*.test.ts'"
+    "test": "tsx --test 'lib/**/*.test.ts' 'features/**/*.test.ts' 'app/**/*.test.ts'"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,json,md,css,scss}": [

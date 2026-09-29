@@ -1,6 +1,10 @@
-import { PageHeader } from "@/components/page-header";
+import { Suspense } from "react";
+import { BudgetsView } from "@/features/budgets/components/budgets-view";
 
-// Placeholder — replaced by the budgets feature.
 export default function BudgetsPage() {
-  return <PageHeader title="Budgets" />;
+  return (
+    <Suspense>
+      <BudgetsView />
+    </Suspense>
+  );
 }

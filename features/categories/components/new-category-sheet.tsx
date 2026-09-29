@@ -1,52 +1,26 @@
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+"use client";
 
-import { insertAccountSchema, insertCategoriesSchema } from "@/db/schema";
-import { z } from "zod";
-import { useCreateCategory } from "../api/use-create-category";
-import { CategoryForm } from "./category-form";
+import { FormSheet } from "@/app/components/form-sheet";
 import { useNewCategory } from "../hooks/use-new-category";
+import { CategoryForm } from "./category-form";
+import { useCreateCategory } from "../api/use-create-category";
 
-const formSchema = insertCategoriesSchema.pick({
-  name: true,
-});
-
-type FormValues = z.input<typeof formSchema>;
 export const NewCategorySheet = () => {
   const { isOpen, onClose } = useNewCategory();
-
   const mutation = useCreateCategory();
 
-  const onSubmit = (values: FormValues) => {
-    mutation.mutate(values, {
-      onSuccess: () => {
-        onClose();
-      },
-    });
-  };
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="space-y-4 bg-white">
-        <SheetHeader>
-          <SheetTitle>New Category</SheetTitle>
-          <SheetDescription>
-            Create a new category to track your transactions.
-          </SheetDescription>
-        </SheetHeader>
-
-        <CategoryForm
-          onSubmit={onSubmit}
-          disabled={mutation.isPending}
-          defaultValue={{
-            name: "",
-          }}
-        />
-      </SheetContent>
-    </Sheet>
+    <FormSheet
+      open={isOpen}
+      onOpenChange={onClose}
+      title="New category"
+      description="Categories group your transactions and power budgets and reports."
+    >
+      <CategoryForm
+        onSubmit={(values) => mutation.mutate(values, { onSuccess: onClose })}
+        disabled={mutation.isPending}
+        saving={mutation.isPending}
+      />
+    </FormSheet>
   );
 };

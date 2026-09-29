@@ -1,6 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
+import type { InferResponseType } from "hono";
 import { client } from "@/lib/hono";
+
+export type Summary = Extract<
+  InferResponseType<typeof client.api.summary.$get, 200>,
+  { data: unknown }
+>["data"];
 
 export const useGetSummary = () => {
   const params = useSearchParams();
