@@ -45,6 +45,12 @@ const assertOwnership = async (
   }
 };
 
+// recurringId is server-managed; accepting it would let clients link to foreign rules.
+const bodySchema = insertTransactionsSchema.omit({
+  id: true,
+  recurringId: true,
+});
+
 const app = new Hono()
   .onError((error, c) => {
     console.error("API error:", error);
@@ -115,7 +121,6 @@ const app = new Hono()
         return c.json(
           {
             error: "Failed to fetch data",
-            details: error instanceof Error ? error.message : "Unknown error",
           },
           500,
         );
@@ -164,52 +169,31 @@ const app = new Hono()
       return c.json({ data });
     },
   )
-  .post(
-    "/",
-    clerkMiddleware(),
-    zValidator(
-      "json",
-      insertTransactionsSchema.omit({
-        id: true,
-      }),
-    ),
-    async (c) => {
-      const auth = getAuth(c);
-      const values = c.req.valid("json");
-      if (!auth?.userId) {
-        return c.json({ error: "Unauthorized" }, 401);
-      }
+  .post("/", clerkMiddleware(), zValidator("json", bodySchema), async (c) => {
+    const auth = getAuth(c);
+    const values = c.req.valid("json");
+    if (!auth?.userId) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
 
-      await assertOwnership(
-        auth.userId,
-        [values.accountId],
-        [values.categoryId],
-      );
+    await assertOwnership(auth.userId, [values.accountId], [values.categoryId]);
 
-      const [data] = await db
-        .insert(transactions)
-        .values({
-          id: createId(),
-          ...values,
-        })
-        .returning();
+    const [data] = await db
+      .insert(transactions)
+      .values({
+        id: createId(),
+        ...values,
+      })
+      .returning();
 
-      return c.json({
-        data,
-      });
-    },
-  )
+    return c.json({
+      data,
+    });
+  })
   .post(
     "/bulk-create",
     clerkMiddleware(),
-    zValidator(
-      "json",
-      z.array(
-        insertTransactionsSchema.omit({
-          id: true,
-        }),
-      ),
-    ),
+    zValidator("json", z.array(bodySchema)),
 
     async (c) => {
       const auth = getAuth(c);
@@ -291,12 +275,7 @@ const app = new Hono()
         id: z.string().optional(),
       }),
     ),
-    zValidator(
-      "json",
-      insertTransactionsSchema.omit({
-        id: true,
-      }),
-    ),
+    zValidator("json", bodySchema),
     async (c) => {
       const auth = getAuth(c);
       const { id } = c.req.valid("param");

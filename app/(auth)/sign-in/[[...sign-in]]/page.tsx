@@ -1,9 +1,9 @@
-import { SignIn, ClerkLoaded, ClerkLoading } from "@clerk/nextjs";
+import { SignIn, ClerkFailed, ClerkLoaded, ClerkLoading } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export const metadata: Metadata = { title: "Sign in · BudgetBuddy" };
+export const metadata: Metadata = { title: "Sign in" };
 
 export default function Page() {
   return (
@@ -22,6 +22,12 @@ export default function Page() {
           <Skeleton className="h-10 w-full" />
         </div>
       </ClerkLoading>
+      <ClerkFailed>
+        <p className="w-full rounded-2xl border bg-card p-8 text-center text-sm text-muted-foreground">
+          Sign-in couldn&apos;t load. Check your connection and refresh the
+          page.
+        </p>
+      </ClerkFailed>
       <p className="text-sm text-muted-foreground">
         New to BudgetBuddy?{" "}
         <Link

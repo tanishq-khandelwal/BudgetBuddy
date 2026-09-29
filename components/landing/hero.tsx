@@ -26,30 +26,30 @@ export const Hero = () => {
       />
       <div className="relative mx-auto max-w-6xl px-4 pb-16 pt-14 sm:px-6 sm:pt-20 lg:pt-24">
         <div className="mx-auto max-w-3xl text-center">
-          <motion.p
-            {...enter(0)}
-            className="mx-auto inline-flex items-center gap-2 rounded-full border bg-card/60 px-3 py-1 text-xs text-muted-foreground backdrop-blur"
+          <p
+            style={{ animationDelay: "0ms" }}
+            className="animate-slide-up mx-auto inline-flex items-center gap-2 rounded-full border bg-card/60 px-3 py-1 text-xs text-muted-foreground backdrop-blur"
           >
             <span className="size-1.5 rounded-full bg-success" />
             Budgets, bills and reports in one place
-          </motion.p>
-          <motion.h1
-            {...enter(0.05)}
-            className="mt-6 text-balance text-4xl font-semibold tracking-tight sm:text-6xl"
+          </p>
+          <h1
+            style={{ animationDelay: "50ms" }}
+            className="animate-slide-up mt-6 text-balance text-4xl font-semibold tracking-tight sm:text-6xl"
           >
             Know where every dollar <span className="text-primary">goes</span>.
-          </motion.h1>
-          <motion.p
-            {...enter(0.1)}
-            className="mx-auto mt-5 max-w-xl text-balance text-base text-muted-foreground sm:text-lg"
+          </h1>
+          <p
+            style={{ animationDelay: "100ms" }}
+            className="animate-slide-up mx-auto mt-5 max-w-xl text-balance text-base text-muted-foreground sm:text-lg"
           >
             BudgetBuddy brings your accounts, transactions, budgets and
             recurring bills together, so you can spend with confidence and save
             on purpose.
-          </motion.p>
-          <motion.div
-            {...enter(0.15)}
-            className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center"
+          </p>
+          <div
+            style={{ animationDelay: "150ms" }}
+            className="animate-slide-up mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center"
           >
             <Button asChild size="lg" className="h-12 px-6">
               <Link href="/sign-up">
@@ -59,13 +59,13 @@ export const Hero = () => {
             <Button asChild size="lg" variant="outline" className="h-12 px-6">
               <a href="#features">See features</a>
             </Button>
-          </motion.div>
-          <motion.p
-            {...enter(0.2)}
-            className="mt-4 text-xs text-muted-foreground"
+          </div>
+          <p
+            style={{ animationDelay: "200ms" }}
+            className="animate-slide-up mt-4 text-xs text-muted-foreground"
           >
             Free forever · No credit card · Set up in a minute
-          </motion.p>
+          </p>
         </div>
 
         <motion.div

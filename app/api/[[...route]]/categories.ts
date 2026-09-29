@@ -39,7 +39,6 @@ const app = new Hono()
       return c.json(
         {
           error: "Failed to fetch data",
-          details: error instanceof Error ? error.message : "Unknown error",
         },
         500,
       );

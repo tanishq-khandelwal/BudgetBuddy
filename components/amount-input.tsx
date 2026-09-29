@@ -42,7 +42,11 @@ export const AmountInput = ({
         : emptyMode;
 
   const symbol =
-    new Intl.NumberFormat(undefined, { style: "currency", currency })
+    new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency,
+      currencyDisplay: "narrowSymbol",
+    })
       .formatToParts(0)
       .find((p) => p.type === "currency")?.value ?? "";
 

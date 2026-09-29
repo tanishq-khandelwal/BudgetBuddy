@@ -223,7 +223,6 @@ const app = new Hono().get(
       return c.json(
         {
           error: "Failed to fetch summary",
-          details: error instanceof Error ? error.message : "Unknown error",
         },
         500,
       );

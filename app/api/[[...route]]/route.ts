@@ -22,7 +22,6 @@ app.onError((err, c) => {
   return c.json(
     {
       error: "Internal Server Error",
-      message: err.message || "Unknown error",
     },
     500,
   );

@@ -19,19 +19,24 @@ import {
   nextOccurrences,
 } from "@/lib/recurring";
 
-const bodySchema = z.object({
-  accountId: z.string().min(1),
-  categoryId: z.string().nullable().optional(),
-  payee: z.string().trim().min(1),
-  amount: z
-    .number()
-    .int()
-    .refine((n) => n !== 0, "Amount cannot be zero"),
-  notes: z.string().nullable().optional(),
-  frequency: z.enum(RECURRING_FREQUENCIES),
-  startDate: z.coerce.date(),
-  endDate: z.coerce.date().nullable().optional(),
-});
+const bodySchema = z
+  .object({
+    accountId: z.string().min(1),
+    categoryId: z.string().nullable().optional(),
+    payee: z.string().trim().min(1),
+    amount: z
+      .number()
+      .int()
+      .refine((n) => n !== 0, "Amount cannot be zero"),
+    notes: z.string().nullable().optional(),
+    frequency: z.enum(RECURRING_FREQUENCIES),
+    startDate: z.coerce.date(),
+    endDate: z.coerce.date().nullable().optional(),
+  })
+  .refine((v) => !v.endDate || v.endDate >= v.startDate, {
+    message: "End date must be on or after start date",
+    path: ["endDate"],
+  });
 
 const idParam = zValidator("param", z.object({ id: z.string() }));
 
@@ -124,18 +129,27 @@ const app = new Hono()
         .returning({ id: rules.id });
       if (!claimed.length || !dates.length) continue;
 
-      await db.insert(transactions).values(
-        dates.map((date) => ({
-          id: createId(),
-          date,
-          amount: rule.amount,
-          payee: rule.payee,
-          notes: rule.notes,
-          accountId: rule.accountId,
-          categoryId: rule.categoryId,
-          recurringId: rule.id,
-        })),
-      );
+      try {
+        await db.insert(transactions).values(
+          dates.map((date) => ({
+            id: createId(),
+            date,
+            amount: rule.amount,
+            payee: rule.payee,
+            notes: rule.notes,
+            accountId: rule.accountId,
+            categoryId: rule.categoryId,
+            recurringId: rule.id,
+          })),
+        );
+      } catch (error) {
+        // Release the claim so the batch is retried on the next run.
+        await db
+          .update(rules)
+          .set({ nextDate: rule.nextDate, isActive: true })
+          .where(and(eq(rules.id, rule.id), eq(rules.nextDate, nextDate)));
+        throw error;
+      }
       created += dates.length;
     }
 
@@ -203,7 +217,13 @@ const app = new Hono()
 
       const [data] = await db
         .update(rules)
-        .set({ ...values, endDate: values.endDate ?? null, nextDate })
+        .set({
+          ...values,
+          categoryId: values.categoryId ?? null,
+          notes: values.notes ?? null,
+          endDate: values.endDate ?? null,
+          nextDate,
+        })
         .where(and(eq(rules.id, id), eq(rules.userId, userId)))
         .returning();
       return c.json({ data });

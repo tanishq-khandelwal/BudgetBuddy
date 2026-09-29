@@ -22,6 +22,8 @@ export function formatCurrency(
   return new Intl.NumberFormat(undefined, {
     style: "currency",
     currency,
+    // "$" rather than "US$" on non-US locales.
+    currencyDisplay: "narrowSymbol",
     ...options,
   }).format(value);
 }
