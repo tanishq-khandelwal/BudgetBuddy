@@ -122,7 +122,7 @@ const ProfileSection = () => {
   return (
     <Section
       title="Profile"
-      description="Your account details, managed securely by Clerk."
+      description="Your account details and sign-in settings."
     >
       <div className="flex items-center gap-4 pb-4">
         {!isLoaded ? (

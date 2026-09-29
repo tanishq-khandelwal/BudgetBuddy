@@ -62,7 +62,7 @@ export const Stats = () => (
     <dl className="mx-auto grid max-w-6xl grid-cols-2 gap-6 px-4 py-8 sm:px-6 md:grid-cols-4">
       {[
         ["8", "tools in one app"],
-        ["Clerk", "bank-grade sign-in"],
+        ["Private", "your data, only yours"],
         ["Light & dark", "themes built in"],
         ["⌘K", "jump anywhere"],
       ].map(([v, l]) => (
@@ -269,7 +269,7 @@ export const Security = () => (
       {[
         [
           ShieldCheck,
-          "Secure sign-in by Clerk",
+          "Secure sign-in",
           "Industry-standard authentication with managed sessions. We never handle your password.",
         ],
         [
@@ -316,7 +316,7 @@ const faqs = [
   ],
   [
     "Is my data private?",
-    "Sign-in is handled by Clerk and every record is tied to your account. You can export your data at any time.",
+    "Yes. Every record is tied to your account and nobody else can see it. You can export your data at any time.",
   ],
   [
     "Does it work on my phone?",
