@@ -8,9 +8,8 @@ export const useEditCategory = (id?: string) => {
     mutationFn: async (values: { name: string }) => {
       if (!id) throw new Error("Category ID is required");
 
-      const response = await (client.api.categories as Record<string, any>)[
-        id
-      ].$patch({
+      const response = await client.api.categories[":id"].$patch({
+        param: { id },
         json: values,
       });
 

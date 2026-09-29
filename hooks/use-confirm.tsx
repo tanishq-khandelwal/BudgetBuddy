@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type JSX } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,7 +11,7 @@ import {
 
 export const useConfirm = (
   title: string,
-  message: string
+  message: string,
 ): [() => JSX.Element, () => Promise<unknown>] => {
   const [promise, setPromise] = useState<{
     resolve: (value: boolean) => void;
@@ -37,7 +37,7 @@ export const useConfirm = (
   };
 
   const ConfirmationDialog = () => (
-    <Dialog open={promise !== null} >
+    <Dialog open={promise !== null}>
       <DialogContent className="bg-white">
         <DialogHeader>
           <DialogTitle>

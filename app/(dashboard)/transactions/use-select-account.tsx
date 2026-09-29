@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, type JSX } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -27,7 +27,7 @@ export const useSelectAccount = (): [
   const [promise, setPromise] = useState<{
     resolve: (value: string | undefined) => void;
   } | null>(null);
-  const selectValue = useRef<string>();
+  const selectValue = useRef<string | undefined>(undefined);
 
   const confirm = () =>
     new Promise((resolve, reject) => {

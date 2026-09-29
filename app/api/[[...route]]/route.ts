@@ -6,12 +6,12 @@ import { HTTPException } from "hono/http-exception";
 import { clerkMiddleware } from "@hono/clerk-auth";
 import transactions from "./transactions";
 import summary from "./summary";
-
-export const runtime = "edge";
+import budgets from "./budgets";
+import recurring from "./recurring";
+import reports from "./reports";
+import settings from "./settings";
 
 const app = new Hono().basePath("/api");
-
-app.use("*", clerkMiddleware());
 
 app.onError((err, c) => {
   console.error("Unhandled Error:", err);
@@ -23,7 +23,6 @@ app.onError((err, c) => {
     {
       error: "Internal Server Error",
       message: err.message || "Unknown error",
-      stack: err.stack || null,
     },
     500,
   );
@@ -35,7 +34,11 @@ const routes = app
   .route("/account", account)
   .route("/categories", categories)
   .route("/transactions", transactions)
-  .route("/summary", summary);
+  .route("/summary", summary)
+  .route("/budgets", budgets)
+  .route("/recurring", recurring)
+  .route("/reports", reports)
+  .route("/settings", settings);
 
 export type AppType = typeof routes;
 

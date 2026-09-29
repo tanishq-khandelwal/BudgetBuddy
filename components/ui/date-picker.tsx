@@ -35,7 +35,7 @@ export const DatePicker = ({ value, onChange, disabled }: Props) => {
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="bg-white">
+      <PopoverContent className="w-auto p-0">
         <Calendar
           mode="single"
           selected={value}
